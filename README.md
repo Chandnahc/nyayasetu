@@ -33,7 +33,7 @@ Karnataka's Court Case Monitoring System (CCMS) receives hundreds of High Court 
 
 ## 🖥️ Demo
 
-🔗 **Live App:** [nyayasetu.streamlit.app](https://nyayasetu.streamlit.app)
+🔗 **Live App:** [nyayasetu.streamlit.app](https://nyayasetu-85ftdvkwemxeobgagq2pk5.streamlit.app/)
 
 ### Screenshots
 
