@@ -64,7 +64,14 @@ st.markdown("""
 # SIDEBAR NAVIGATION
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/240px-Emblem_of_India.svg.png", width=60)
+    st.markdown("""
+<div style="text-align:center; padding: 8px 0;">
+    <div style="font-size: 2.5rem;">⚖️</div>
+    <div style="font-size: 0.65rem; font-weight: 600; color: #555; letter-spacing: 0.05em;">
+        GOVERNMENT OF KARNATAKA
+    </div>
+</div>
+""", unsafe_allow_html=True)
     st.markdown("## ⚖️ NyayaSetu")
     st.markdown("*Court Judgment AI Assistant*")
     st.markdown("---")
