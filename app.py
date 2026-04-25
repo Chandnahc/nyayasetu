@@ -9,6 +9,30 @@ from database import (
     get_all_judgments, get_verified_actions_all
 )
 
+from datetime import datetime, date
+
+def get_urgency(deadline_str: str):
+    """Calculate days remaining to deadline and return urgency label."""
+    try:
+        # Try common date formats
+        for fmt in ["%d/%m/%Y", "%B %d, %Y", "%d %B %Y", "%Y-%m-%d"]:
+            try:
+                deadline_date = datetime.strptime(deadline_str.strip(), fmt).date()
+                days_left = (deadline_date - date.today()).days
+                if days_left < 0:
+                    return f"🔴 Overdue by {abs(days_left)} days"
+                elif days_left <= 7:
+                    return f"🔴 {days_left} days left"
+                elif days_left <= 30:
+                    return f"🟡 {days_left} days left"
+                else:
+                    return f"🟢 {days_left} days left"
+            except:
+                continue
+        return "📅 " + deadline_str
+    except:
+        return "📅 " + deadline_str
+
 # ─────────────────────────────────────────────
 # APP CONFIG
 # ─────────────────────────────────────────────
@@ -262,15 +286,28 @@ elif page == "🔍 Review & Verify":
                             key=f"edit_{item_id}",
                             height=80
                         )
-                        col1, col2 = st.columns([1, 4])
+                        col1, col2, col3 = st.columns([2, 2, 3])
                         with col1:
                             if st.button("✅ Approve", key=f"approve_{item_id}", type="primary"):
                                 verify_item(item_id, edited)
                                 st.rerun()
                         with col2:
-                            if st.button("❌ Mark as Not Found", key=f"reject_{item_id}"):
+                            if st.button("❌ Not Found", key=f"reject_{item_id}"):
                                 verify_item(item_id, "Not applicable")
                                 st.rerun()
+                        with col3:
+                            reject_reason = st.text_input(
+                                "Reject with reason:",
+                                placeholder="e.g. Incorrect extraction",
+                                key=f"reason_{item_id}",
+                                label_visibility="collapsed"
+                            )
+                            if st.button("🚫 Reject", key=f"reject_reason_{item_id}"):
+                                if reject_reason.strip():
+                                    verify_item(item_id, f"REJECTED: {reject_reason}")
+                                    st.rerun()
+                                else:
+                                    st.warning("Please enter a reason first.")
 
     # ── TAB 2: Action Plan ──
     with tab2:
@@ -366,9 +403,13 @@ elif page == "📊 Dashboard":
         priority_emoji = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(priority, "⚪")
         action_emoji   = {"Comply": "✅", "Consider Appeal": "⚠️", "Monitor": "👁️", "File Response": "📝"}.get(action_type, "📌")
 
+        # Background tint per priority
+        bg_color = {"High": "#fff5f5", "Medium": "#fffbf0", "Low": "#f0fff8"}.get(priority, "#f8f9fa")
+        urgency = get_urgency(deadline)
+
         with st.container():
             st.markdown(f"""
-            <div class="action-card priority-{priority.lower()}">
+            <div class="action-card priority-{priority.lower()}" style="background:{bg_color};">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:1rem; font-weight:600;">{action_emoji} {action_type}</span>
                     <span>{priority_emoji} {priority} Priority</span>
@@ -376,8 +417,8 @@ elif page == "📊 Dashboard":
                 <div style="margin-top:6px; color:#444;">{description}</div>
                 <div style="margin-top:8px; font-size:0.85rem; color:#666;">
                     🏛️ <strong>{department}</strong> &nbsp;|&nbsp;
-                    📅 Deadline: <strong>{deadline}</strong> &nbsp;|&nbsp;
-                    📄 Source: {filename}
+                    {urgency} &nbsp;|&nbsp;
+                    📄 {filename}
                 </div>
             </div>
             """, unsafe_allow_html=True)
