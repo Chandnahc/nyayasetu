@@ -241,6 +241,18 @@ elif page == "🔍 Review & Verify":
                     st.markdown(f"{conf_color} **AI extracted value:**")
                     st.info(ai_value or "Not found")
 
+                    # Source highlight
+                    from extractor import find_source_excerpt
+                    # Get raw text for this judgment from uploads folder
+                    import fitz
+                    pdf_files = list(Path("uploads").glob("*.pdf"))
+                    if pdf_files:
+                        doc = fitz.open(str(pdf_files[0]))
+                        raw = " ".join([p.get_text() for p in doc])
+                        doc.close()
+                        excerpt = find_source_excerpt(raw, ai_value or "")
+                        st.caption(f"📌 **Source in document:** {excerpt}")
+
                     if review_status == "approved":
                         st.success(f"✅ Verified value: {verified_value}")
                     else:
