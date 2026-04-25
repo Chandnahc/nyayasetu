@@ -138,50 +138,65 @@ if page == "📤 Upload Judgment":
             with open(pdf_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
-            with st.spinner("🔍 Reading PDF and analysing with Gemini AI... This takes 15–30 seconds."):
-                try:
-                    case_details, action_plans, raw_text = process_judgment(str(pdf_path))
+            progress_bar = st.progress(0, text="⏳ Starting analysis...")
+            try:
+                progress_bar.progress(10, text="📄 Step 1/4 — Reading PDF pages...")
+                from extractor import extract_text_from_pdf
+                raw_text = extract_text_from_pdf(str(pdf_path))
 
-                    # Save to database
-                    judgment_id = save_judgment(uploaded_file.name)
-                    save_extracted_items(judgment_id, case_details)
-                    save_action_plans(judgment_id, action_plans)
+                progress_bar.progress(35, text="🔍 Step 2/4 — Extracting case details with Gemini AI...")
+                from extractor import extract_case_details
+                case_details = extract_case_details(raw_text)
 
-                    st.session_state["last_judgment_id"] = judgment_id
-                    st.session_state["last_filename"] = uploaded_file.name
+                progress_bar.progress(65, text="📋 Step 3/4 — Generating action plan with Gemini AI...")
+                import time
+                time.sleep(3)
+                from extractor import generate_action_plan
+                action_plans = generate_action_plan(raw_text, case_details)
 
-                    st.success("✅ Analysis complete! Switch to **Review & Verify** to check the results.")
+                progress_bar.progress(90, text="💾 Step 4/4 — Saving to database...")
 
-                    # Preview extracted details
-                    st.markdown('<p class="section-header">Extracted Case Details (Preview)</p>', unsafe_allow_html=True)
-                    preview_fields = ["case_number", "court_name", "order_date", "petitioner", "respondent"]
-                    for field in preview_fields:
-                        if field in case_details:
-                            data = case_details[field]
-                            conf = data.get("confidence", "low")
-                            conf_class = f"confidence-{conf}"
-                            st.markdown(
-                                f"**{field.replace('_', ' ').title()}:** {data.get('value', 'N/A')} "
-                                f"<span class='{conf_class}'>({conf} confidence)</span>",
-                                unsafe_allow_html=True
-                            )
+                # Save to database
+                judgment_id = save_judgment(uploaded_file.name)
+                save_extracted_items(judgment_id, case_details)
+                save_action_plans(judgment_id, action_plans)
 
-                    st.markdown('<p class="section-header">Generated Action Plan (Preview)</p>', unsafe_allow_html=True)
-                    for i, action in enumerate(action_plans[:3]):
-                        priority = action.get("priority", "Medium")
-                        p_class = f"priority-{priority.lower()}"
-                        st.markdown(f"""
-                        <div class="action-card {p_class}">
-                            <strong>{action.get('action_type', 'Action')}</strong> · 
-                            <em>{action.get('department', 'N/A')}</em> · 
-                            Priority: {priority}<br/>
-                            {action.get('description', '')}
-                        </div>
-                        """, unsafe_allow_html=True)
+                st.session_state["last_judgment_id"] = judgment_id
+                st.session_state["last_filename"] = uploaded_file.name
 
-                except Exception as e:
-                    st.error(f"❌ Error during analysis: {str(e)}")
-                    st.info("Make sure your GEMINI_API_KEY in the .env file is correct.")
+                st.success("✅ Analysis complete! Switch to **Review & Verify** to check the results.")
+                progress_bar.progress(100, text="✅ Analysis complete!")
+
+                # Preview extracted details
+                st.markdown('<p class="section-header">Extracted Case Details (Preview)</p>', unsafe_allow_html=True)
+                preview_fields = ["case_number", "court_name", "order_date", "petitioner", "respondent"]
+                for field in preview_fields:
+                    if field in case_details:
+                        data = case_details[field]
+                        conf = data.get("confidence", "low")
+                        conf_class = f"confidence-{conf}"
+                        st.markdown(
+                            f"**{field.replace('_', ' ').title()}:** {data.get('value', 'N/A')} "
+                            f"<span class='{conf_class}'>({conf} confidence)</span>",
+                            unsafe_allow_html=True
+                        )
+
+                st.markdown('<p class="section-header">Generated Action Plan (Preview)</p>', unsafe_allow_html=True)
+                for i, action in enumerate(action_plans[:3]):
+                    priority = action.get("priority", "Medium")
+                    p_class = f"priority-{priority.lower()}"
+                    st.markdown(f"""
+                    <div class="action-card {p_class}">
+                        <strong>{action.get('action_type', 'Action')}</strong> · 
+                        <em>{action.get('department', 'N/A')}</em> · 
+                        Priority: {priority}<br/>
+                        {action.get('description', '')}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"❌ Error during analysis: {str(e)}")
+                st.info("Make sure your GEMINI_API_KEY in the .env file is correct.")
 
 
 # ═════════════════════════════════════════════
