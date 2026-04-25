@@ -104,7 +104,19 @@ if page == "📤 Upload Judgment":
     with col3:
         pending = [j for j in all_j if j[3] == "pending"]
         st.metric("Pending Review", len(pending))
+    
+    # ── HOW IT WORKS BANNER ──
+    st.markdown('<p class="section-header">How It Works</p>', unsafe_allow_html=True)
 
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.info("📤 **1. Upload**\n\nUpload any Karnataka High Court judgment PDF — digital or scanned")
+    with col2:
+        st.info("🤖 **2. AI Analyses**\n\nGemini AI extracts case details, directives, deadlines and generates an action plan")
+    with col3:
+        st.info("✅ **3. Officer Verifies**\n\nEvery AI decision is reviewed and approved by a human officer before use")
+    with col4:
+        st.info("📊 **4. Dashboard**\n\nVerified actions shown department-wise with deadlines, priority and CSV export")
     st.markdown('<p class="section-header">Upload a Court Judgment PDF</p>', unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader(
