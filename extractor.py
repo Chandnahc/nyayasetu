@@ -174,6 +174,31 @@ FULL JUDGMENT TEXT:
         }]
 
 
+def find_source_excerpt(full_text: str, value: str) -> str:
+    """
+    Find the sentence in the original PDF text that contains the extracted value.
+    Returns a short excerpt as the source highlight.
+    """
+    if not value or value in ["Not found", "Could not extract", "Not applicable"]:
+        return "No source found"
+
+    # Split text into sentences roughly
+    sentences = full_text.replace("\n", " ").split(". ")
+
+    # Find first sentence containing any significant word from the value
+    keywords = [w for w in value.split() if len(w) > 4][:3]
+
+    for sentence in sentences:
+        for keyword in keywords:
+            if keyword.lower() in sentence.lower():
+                excerpt = sentence.strip()
+                # Trim to max 180 characters
+                if len(excerpt) > 180:
+                    excerpt = excerpt[:180] + "..."
+                return f'"{excerpt}"'
+
+    return "Source not pinpointed — review full document"
+
 # ─────────────────────────────────────────────
 # 4. FULL PIPELINE — call this from app.py
 # ─────────────────────────────────────────────
